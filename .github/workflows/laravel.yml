@@ -2,55 +2,60 @@ name: Laravel
 
 on:
   push:
-    branches: [ "master" ]
+    branches:
+      - "master"  # Triggered when a push is made to the 'master' branch
   pull_request:
-    branches: [ "master" ]
+    branches:
+      - "master"  # Triggered on pull requests to the 'master' branch
 
 jobs:
   laravel-tests:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # Run on Windows environment
 
     services:
       mysql:
-        image: mysql:5.7
+        image: mysql:5.7  # Runs a MySQL service for testing
         env:
-          MYSQL_DATABASE: test_database
+          MYSQL_DATABASE: test_database  # Name of the test database
         ports:
-          - 3306:3306
+          - 3306:3306  # Exposes the MySQL port
         options: --health-cmd="mysqladmin ping --silent" --health-timeout=30s --health-start-period=5s --health-retries=5
 
     steps:
-    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
-      with:
-        php-version: '8.0'
+      # Checkout the repository
+      - uses: actions/checkout@v4
 
-    - uses: actions/checkout@v4
+      # Set up PHP environment (for Windows)
+      - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+        with:
+          php-version: '8.0'
 
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+      # Install dependencies using Composer
+      - name: Install Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
-    - name: Install Dependencies
-      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      # Generate the Laravel app key
+      - name: Generate key
+        run: php artisan key:generate
 
-    - name: Generate key
-      run: php artisan key:generate
+      # Configure the database connection (using the MySQL service in GitHub Actions)
+      - name: Configure Database Connection
+        run: |
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=mysql/' .env
+          sed -i 's/DB_HOST=127.0.0.1/DB_HOST=localhost/' .env
+          sed -i 's/DB_PORT=3306/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=homestead/DB_DATABASE=test_database/' .env
+          sed -i 's/DB_USERNAME=root/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=/DB_PASSWORD=/' .env
 
-    - name: Directory Permissions
-      run: chmod -R 777 storage bootstrap/cache
+      # Run migrations (if required for tests)
+      - name: Migrate Database
+        run: php artisan migrate --env=testing
 
-    - name: Configure Database Connection
-      run: |
-        sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=mysql/' .env
-        sed -i 's/DB_HOST=127.0.0.1/DB_HOST=localhost/' .env
-        sed -i 's/DB_PORT=3306/DB_PORT=3306/' .env
-        sed -i 's/DB_DATABASE=homestead/DB_DATABASE=my-app/' .env
-        sed -i 's/DB_USERNAME=root/DB_USERNAME=root/' .env
-        sed -i 's/DB_PASSWORD=/DB_PASSWORD=/' .env
+      # Run PHPUnit/Pest tests
+      - name: Execute tests (Unit and Feature tests) via PHPUnit/Pest
+        run: php artisan test
 
-    - name: Execute tests (Unit and Feature tests) via PHPUnit/Pest
-      env:
-        DB_CONNECTION: mysql
-        DB_DATABASE: my-app
-        DB_USERNAME: root
-        DB_PASSWORD: 
-      run: php artisan test
+      # Clear cache after running tests (optional)
+      - name: Clear Cache
+        run: php artisan cache:clear
