@@ -10,7 +10,7 @@ on:
 
 jobs:
   laravel-tests:
-    runs-on: windows-latest  # Run on Windows environment
+    runs-on: ubuntu-latest   # Run on Windows environment
 
     services:
       mysql:
