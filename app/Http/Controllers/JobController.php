@@ -12,19 +12,34 @@ use Illuminate\Support\Facades\Auth;
 
 class JobController extends Controller
 {
+
+    //     return view(
+    //         'jobs.index',
+    //         [
+    //             'jobs' => $jobs[0],
+    //             'featuredJobs' => $jobs[1],
+    //             'tags' => Tag::all(),
+    //         ]
+    //     );
+    // }
+
     public function index()
     {
         $jobs = Job::latest()->with(['employer', 'tags'])->get()->groupBy('featured');
 
+        $jobsWithNoFeatured = $jobs->get(0, collect());
+        $featuredJobs = $jobs->get(1, collect());
+
         return view(
             'jobs.index',
             [
-                'jobs' => $jobs[0],
-                'featuredJobs' => $jobs[1],
+                'jobs' => $jobsWithNoFeatured,
+                'featuredJobs' => $featuredJobs,
                 'tags' => Tag::all(),
             ]
         );
     }
+
 
     public function create()
     {
