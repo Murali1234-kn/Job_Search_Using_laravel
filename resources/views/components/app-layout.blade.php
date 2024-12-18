@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,6 +39,7 @@
             @guest
             <div class="space-x-6 font-bold">
                 <a href="/register">Sign Up</a>
+
                 <a href="/login">Log In</a>
             </div>
             @endguest

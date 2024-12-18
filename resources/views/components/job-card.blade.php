@@ -9,7 +9,6 @@
             <h3 class="group-hover:text-blue-600 text-xl font-bold">
                 <a href="{{ $job->url }}" target="_blank">
                     {{ $job->title}}
-
                 </a>
             </h3>
             <p class="tetx-sm mt-4">{{ $job->salary }}</p>
